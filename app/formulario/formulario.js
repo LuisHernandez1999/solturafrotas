@@ -1,6 +1,6 @@
+"use client"
 
-// Substitua o import existente por este mais completo
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import {
   View,
   Text,
@@ -16,11 +16,10 @@ import {
   StatusBar,
   PixelRatio,
   useWindowDimensions,
-  Alert,
   Animated,
   Easing,
-  Image,
   ActivityIndicator,
+  Modal,
 } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useNavigation } from "@react-navigation/native"
@@ -142,42 +141,42 @@ const getResponsiveSize = (size) => {
 
 // Adicione esta função para criar efeitos de ripple nos botões
 const Ripple = ({ style, onPress, children }) => {
-  const [rippleVisible, setRippleVisible] = useState(false);
-  const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
-  const rippleAnim = useRef(new Animated.Value(0)).current;
-  
+  const [rippleVisible, setRippleVisible] = useState(false)
+  const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 })
+  const rippleAnim = useRef(new Animated.Value(0)).current
+
   const handlePressIn = (event) => {
-    const { locationX, locationY } = event.nativeEvent;
-    setRipplePosition({ x: locationX, y: locationY });
-    setRippleVisible(true);
+    const { locationX, locationY } = event.nativeEvent
+    setRipplePosition({ x: locationX, y: locationY })
+    setRippleVisible(true)
     Animated.timing(rippleAnim, {
       toValue: 1,
       duration: 400,
       easing: Easing.out(Easing.ease),
       useNativeDriver: false,
-    }).start();
-  };
-  
+    }).start()
+  }
+
   const handlePressOut = () => {
     Animated.timing(rippleAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: false,
     }).start(() => {
-      setRippleVisible(false);
-    });
-  };
-  
+      setRippleVisible(false)
+    })
+  }
+
   const rippleSize = rippleAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 150],
-  });
-  
+  })
+
   const rippleOpacity = rippleAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.5, 0],
-  });
-  
+  })
+
   return (
     <TouchableOpacity
       style={[styles.rippleContainer, style]}
@@ -203,14 +202,31 @@ const Ripple = ({ style, onPress, children }) => {
         />
       )}
     </TouchableOpacity>
-  );
-};
+  )
+}
 
-// Adicione um estado global para controlar qual autocomplete está aberto
+// Contexto para controlar qual autocomplete está aberto
+const ActiveAutocompleteContext = React.createContext(null)
+
+// Provider para o contexto
+const ActiveAutocompleteProvider = ({ children }) => {
+  const [activeAutocomplete, setActiveAutocomplete] = useState(null)
+  return (
+    <ActiveAutocompleteContext.Provider value={{ activeAutocomplete, setActiveAutocomplete }}>
+      {children}
+    </ActiveAutocompleteContext.Provider>
+  )
+}
+
+// Hook para usar o contexto
 const useActiveAutocomplete = () => {
-  const [activeAutocomplete, setActiveAutocomplete] = useState(null);
-  return { activeAutocomplete, setActiveAutocomplete };
-};
+  const context = React.useContext(ActiveAutocompleteContext)
+  if (!context) {
+    // Fallback para quando o componente não está dentro do provider
+    return { activeAutocomplete: null, setActiveAutocomplete: () => {} }
+  }
+  return context
+}
 
 // Modifique o componente Autocomplete para usar animações e efeitos visuais
 const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label, error, zIndex = 1, id }) => {
@@ -218,11 +234,11 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
   const [showDropdown, setShowDropdown] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const inputHeight = getInputHeight()
-  const { activeAutocomplete, setActiveAutocomplete } = useActiveAutocomplete();
-  const dropdownAnim = useRef(new Animated.Value(0)).current;
-  const borderColorAnim = useRef(new Animated.Value(0)).current;
-  const labelPosition = useRef(new Animated.Value(value ? 1 : 0)).current;
-  
+  const { activeAutocomplete, setActiveAutocomplete } = useActiveAutocomplete()
+  const dropdownAnim = useRef(new Animated.Value(0)).current
+  const borderColorAnim = useRef(new Animated.Value(0)).current
+  const labelPosition = useRef(new Animated.Value(value ? 1 : 0)).current
+
   // Atualiza dados filtrados quando o valor muda
   useEffect(() => {
     if (value) {
@@ -241,34 +257,34 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
         toValue: 0,
         duration: 200,
         useNativeDriver: false,
-      }).start();
+      }).start()
     }
   }, [activeAutocomplete, id])
-  
+
   useEffect(() => {
     Animated.timing(labelPosition, {
-      toValue: (isFocused || value) ? 1 : 0,
+      toValue: isFocused || value ? 1 : 0,
       duration: 200,
       easing: Easing.bezier(0.4, 0, 0.2, 1),
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, value, labelPosition]);
-  
+    }).start()
+  }, [isFocused, value, labelPosition])
+
   useEffect(() => {
     Animated.timing(borderColorAnim, {
       toValue: isFocused ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, borderColorAnim]);
-  
+    }).start()
+  }, [isFocused, borderColorAnim])
+
   useEffect(() => {
     Animated.timing(dropdownAnim, {
       toValue: showDropdown && filteredData.length > 0 ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
-    }).start();
-  }, [showDropdown, filteredData]);
+    }).start()
+  }, [showDropdown, filteredData])
 
   const handleTextChange = (text) => {
     onChangeText(text)
@@ -287,19 +303,19 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
   }
 
   const handleFocus = () => {
-    setIsFocused(true);
+    setIsFocused(true)
     if (value.length > 0) {
       setShowDropdown(true)
       setActiveAutocomplete(id)
     }
   }
-  
+
   const handleBlur = () => {
-    setIsFocused(false);
+    setIsFocused(false)
   }
-  
+
   const labelStyle = {
-    position: 'absolute',
+    position: "absolute",
     left: 15,
     top: labelPosition.interpolate({
       inputRange: [0, 1],
@@ -311,30 +327,30 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
     }),
     color: labelPosition.interpolate({
       inputRange: [0, 1],
-      outputRange: ['#999', '#5C6BC0'],
+      outputRange: ["#999", "#8BC34A"],
     }),
-    backgroundColor: isFocused ? 'white' : 'transparent',
+    backgroundColor: isFocused ? "white" : "transparent",
     paddingHorizontal: labelPosition.interpolate({
       inputRange: [0, 1],
       outputRange: [0, 4],
     }),
     zIndex: 1,
-  };
-  
+  }
+
   const borderColor = borderColorAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#ddd', '#5C6BC0'],
-  });
-  
+    outputRange: ["#ddd", "#8BC34A"],
+  })
+
   const dropdownMaxHeight = dropdownAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 200],
-  });
-  
+  })
+
   const dropdownOpacity = dropdownAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1],
-  });
+  })
 
   return (
     <View style={[styles.inputWrapper, { zIndex: showDropdown ? 100 : zIndex }]}>
@@ -350,7 +366,7 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
       >
         <TextInput
           style={styles.animatedInput}
-          placeholder={isFocused ? placeholder : ''}
+          placeholder={isFocused ? placeholder : ""}
           placeholderTextColor="#999"
           value={value}
           onChangeText={handleTextChange}
@@ -361,8 +377,8 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
           <TouchableOpacity
             style={styles.clearButton}
             onPress={() => {
-              onChangeText('');
-              setShowDropdown(false);
+              onChangeText("")
+              setShowDropdown(false)
             }}
           >
             <Text style={styles.clearButtonText}>×</Text>
@@ -371,14 +387,14 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
       </Animated.View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <Animated.View 
+      <Animated.View
         style={[
           styles.dropdownContainer,
           {
             maxHeight: dropdownMaxHeight,
             opacity: dropdownOpacity,
-            display: dropdownAnim._value === 0 ? 'none' : 'flex',
-          }
+            display: dropdownAnim._value === 0 ? "none" : "flex",
+          },
         ]}
       >
         <FlatList
@@ -387,11 +403,7 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
           keyboardShouldPersistTaps="handled"
           style={styles.dropdown}
           renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={styles.dropdownItem} 
-              onPress={() => handleSelect(item)}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelect(item)} activeOpacity={0.7}>
               <Text style={styles.dropdownItemText}>{item}</Text>
             </TouchableOpacity>
           )}
@@ -401,31 +413,30 @@ const Autocomplete = ({ data, value, onChangeText, onSelect, placeholder, label,
   )
 }
 
-// Modifique o componente de Seleção de Coletores para usar animações e efeitos visuais
 const ColetoresSelector = ({ coletores, setColetores, maxColetores = 3, label, error }) => {
   const [coletor, setColetor] = useState("")
   const [isFocused, setIsFocused] = useState(false)
   const inputHeight = getInputHeight()
-  const borderColorAnim = useRef(new Animated.Value(0)).current;
-  const labelPosition = useRef(new Animated.Value(coletores.length > 0 || coletor ? 1 : 0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  
+  const borderColorAnim = useRef(new Animated.Value(0)).current
+  const labelPosition = useRef(new Animated.Value(coletores.length > 0 || coletor ? 1 : 0)).current
+  const scaleAnim = useRef(new Animated.Value(1)).current
+
   useEffect(() => {
     Animated.timing(labelPosition, {
-      toValue: (isFocused || coletores.length > 0 || coletor) ? 1 : 0,
+      toValue: isFocused || coletores.length > 0 || coletor ? 1 : 0,
       duration: 200,
       easing: Easing.bezier(0.4, 0, 0.2, 1),
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, coletores, coletor, labelPosition]);
-  
+    }).start()
+  }, [isFocused, coletores, coletor, labelPosition])
+
   useEffect(() => {
     Animated.timing(borderColorAnim, {
       toValue: isFocused ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, borderColorAnim]);
+    }).start()
+  }, [isFocused, borderColorAnim])
 
   const addColetor = () => {
     if (coletor.trim() && coletores.length < maxColetores) {
@@ -441,8 +452,8 @@ const ColetoresSelector = ({ coletores, setColetores, maxColetores = 3, label, e
           duration: 100,
           useNativeDriver: true,
         }),
-      ]).start();
-      
+      ]).start()
+
       setColetores([...coletores, coletor.trim()])
       setColetor("")
     }
@@ -453,9 +464,9 @@ const ColetoresSelector = ({ coletores, setColetores, maxColetores = 3, label, e
     newColetores.splice(index, 1)
     setColetores(newColetores)
   }
-  
+
   const labelStyle = {
-    position: 'absolute',
+    position: "absolute",
     left: 15,
     top: labelPosition.interpolate({
       inputRange: [0, 1],
@@ -467,20 +478,20 @@ const ColetoresSelector = ({ coletores, setColetores, maxColetores = 3, label, e
     }),
     color: labelPosition.interpolate({
       inputRange: [0, 1],
-      outputRange: ['#999', '#5C6BC0'],
+      outputRange: ["#999", "#8BC34A"],
     }),
-    backgroundColor: isFocused ? 'white' : 'transparent',
+    backgroundColor: isFocused ? "white" : "transparent",
     paddingHorizontal: labelPosition.interpolate({
       inputRange: [0, 1],
       outputRange: [0, 4],
     }),
     zIndex: 1,
-  };
-  
+  }
+
   const borderColor = borderColorAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#ddd', '#5C6BC0'],
-  });
+    outputRange: ["#ddd", "#8BC34A"],
+  })
 
   return (
     <View style={styles.inputWrapper}>
@@ -496,7 +507,7 @@ const ColetoresSelector = ({ coletores, setColetores, maxColetores = 3, label, e
       >
         <TextInput
           style={styles.animatedInput}
-          placeholder={isFocused ? "Nome do coletor" : ''}
+          placeholder={isFocused ? "Nome do coletor" : ""}
           placeholderTextColor="#999"
           value={coletor}
           onChangeText={setColetor}
@@ -522,12 +533,7 @@ const ColetoresSelector = ({ coletores, setColetores, maxColetores = 3, label, e
       </Animated.View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <Animated.View 
-        style={[
-          styles.coletoresList,
-          { transform: [{ scale: scaleAnim }] }
-        ]}
-      >
+      <Animated.View style={[styles.coletoresList, { transform: [{ scale: scaleAnim }] }]}>
         {coletores.map((item, index) => (
           <View key={index} style={styles.coletorItem}>
             <Text style={styles.coletorName}>{item}</Text>
@@ -560,25 +566,25 @@ const ColetoresSelector = ({ coletores, setColetores, maxColetores = 3, label, e
 const CelularInput = ({ value, onChangeText, label, error }) => {
   const [isFocused, setIsFocused] = useState(false)
   const inputHeight = getInputHeight()
-  const borderColorAnim = useRef(new Animated.Value(0)).current;
-  const labelPosition = useRef(new Animated.Value(value ? 1 : 0)).current;
-  
+  const borderColorAnim = useRef(new Animated.Value(0)).current
+  const labelPosition = useRef(new Animated.Value(value ? 1 : 0)).current
+
   useEffect(() => {
     Animated.timing(labelPosition, {
-      toValue: (isFocused || value) ? 1 : 0,
+      toValue: isFocused || value ? 1 : 0,
       duration: 200,
       easing: Easing.bezier(0.4, 0, 0.2, 1),
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, value, labelPosition]);
-  
+    }).start()
+  }, [isFocused, value, labelPosition])
+
   useEffect(() => {
     Animated.timing(borderColorAnim, {
       toValue: isFocused ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, borderColorAnim]);
+    }).start()
+  }, [isFocused, borderColorAnim])
 
   const formatCelular = (text) => {
     // Remove todos os caracteres não numéricos
@@ -599,9 +605,9 @@ const CelularInput = ({ value, onChangeText, label, error }) => {
 
     onChangeText(formatted)
   }
-  
+
   const labelStyle = {
-    position: 'absolute',
+    position: "absolute",
     left: 15,
     top: labelPosition.interpolate({
       inputRange: [0, 1],
@@ -613,20 +619,20 @@ const CelularInput = ({ value, onChangeText, label, error }) => {
     }),
     color: labelPosition.interpolate({
       inputRange: [0, 1],
-      outputRange: ['#999', '#5C6BC0'],
+      outputRange: ["#999", "#8BC34A"],
     }),
-    backgroundColor: isFocused ? 'white' : 'transparent',
+    backgroundColor: isFocused ? "white" : "transparent",
     paddingHorizontal: labelPosition.interpolate({
       inputRange: [0, 1],
       outputRange: [0, 4],
     }),
     zIndex: 1,
-  };
-  
+  }
+
   const borderColor = borderColorAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#ddd', '#5C6BC0'],
-  });
+    outputRange: ["#ddd", "#8BC34A"],
+  })
 
   return (
     <View style={styles.inputWrapper}>
@@ -642,7 +648,7 @@ const CelularInput = ({ value, onChangeText, label, error }) => {
       >
         <TextInput
           style={styles.animatedInput}
-          placeholder={isFocused ? "(XX) XXXXX-XXXX" : ''}
+          placeholder={isFocused ? "(XX) XXXXX-XXXX" : ""}
           placeholderTextColor="#999"
           value={value}
           onChangeText={formatCelular}
@@ -663,25 +669,25 @@ const DateTimeSelector = ({ date, setDate, label, error }) => {
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const inputHeight = getInputHeight()
-  const borderColorAnim = useRef(new Animated.Value(0)).current;
-  const labelPosition = useRef(new Animated.Value(date ? 1 : 0)).current;
-  
+  const borderColorAnim = useRef(new Animated.Value(0)).current
+  const labelPosition = useRef(new Animated.Value(date ? 1 : 0)).current
+
   useEffect(() => {
     Animated.timing(labelPosition, {
-      toValue: (isFocused || date) ? 1 : 0,
+      toValue: isFocused || date ? 1 : 0,
       duration: 200,
       easing: Easing.bezier(0.4, 0, 0.2, 1),
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, date, labelPosition]);
-  
+    }).start()
+  }, [isFocused, date, labelPosition])
+
   useEffect(() => {
     Animated.timing(borderColorAnim, {
       toValue: isFocused ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
-    }).start();
-  }, [isFocused, borderColorAnim]);
+    }).start()
+  }, [isFocused, borderColorAnim])
 
   const formatDateTime = (date) => {
     if (!date) return ""
@@ -720,9 +726,9 @@ const DateTimeSelector = ({ date, setDate, label, error }) => {
       setDate(currentDate)
     }
   }
-  
+
   const labelStyle = {
-    position: 'absolute',
+    position: "absolute",
     left: 15,
     top: labelPosition.interpolate({
       inputRange: [0, 1],
@@ -734,28 +740,28 @@ const DateTimeSelector = ({ date, setDate, label, error }) => {
     }),
     color: labelPosition.interpolate({
       inputRange: [0, 1],
-      outputRange: ['#999', '#5C6BC0'],
+      outputRange: ["#999", "#8BC34A"],
     }),
-    backgroundColor: 'white',
+    backgroundColor: "white",
     paddingHorizontal: labelPosition.interpolate({
       inputRange: [0, 1],
       outputRange: [0, 4],
     }),
     zIndex: 1,
-  };
-  
+  }
+
   const borderColor = borderColorAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#ddd', '#5C6BC0'],
-  });
+    outputRange: ["#ddd", "#8BC34A"],
+  })
 
   return (
     <View style={styles.inputWrapper}>
       <Animated.Text style={labelStyle}>{label}</Animated.Text>
       <TouchableOpacity
         onPress={() => {
-          setIsFocused(true);
-          setShowDatePicker(true);
+          setIsFocused(true)
+          setShowDatePicker(true)
         }}
         activeOpacity={0.7}
         onPressOut={() => setIsFocused(false)}
@@ -769,13 +775,15 @@ const DateTimeSelector = ({ date, setDate, label, error }) => {
             },
           ]}
         >
-          <Text style={[
-            styles.dateTimeText,
-            { 
-              color: date ? "#333" : "#999",
-              fontSize: normalize(16)
-            }
-          ]}>
+          <Text
+            style={[
+              styles.dateTimeText,
+              {
+                color: date ? "#333" : "#999",
+                fontSize: normalize(16),
+              },
+            ]}
+          >
             {date ? formatDateTime(date) : "Selecionar data e hora"}
           </Text>
           <View style={styles.calendarIcon}>
@@ -806,8 +814,83 @@ const DateTimeSelector = ({ date, setDate, label, error }) => {
   )
 }
 
+// Componente de mensagem de sucesso
+const SuccessMessage = ({ visible, onClose }) => {
+  const scaleAnim = useRef(new Animated.Value(0.5)).current
+  const opacityAnim = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start()
+
+      // Auto-fechar após 3 segundos
+      const timer = setTimeout(() => {
+        handleClose()
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [visible])
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 0.5,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose && onClose()
+    })
+  }
+
+  if (!visible) return null
+
+  return (
+    <Modal transparent visible={visible} animationType="none">
+      <View style={styles.successOverlay}>
+        <Animated.View
+          style={[
+            styles.successContainer,
+            {
+              opacity: opacityAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <View style={styles.successIconContainer}>
+            <Text style={styles.successIcon}>✓</Text>
+          </View>
+          <Text style={styles.successTitle}>Sucesso!</Text>
+          <Text style={styles.successText}>Formulário enviado com sucesso!</Text>
+          <TouchableOpacity style={styles.successCloseButton} onPress={handleClose} activeOpacity={0.7}>
+            <Text style={styles.successCloseButtonText}>OK</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </Modal>
+  )
+}
+
 // Componente principal do formulário
-export default function FormularioColeta() {
+const Formulario = () => {
   // Estados para os campos do formulário
   const [motorista, setMotorista] = useState("")
   const [prefixo, setPrefixo] = useState("")
@@ -819,8 +902,9 @@ export default function FormularioColeta() {
   const [lider, setLider] = useState("")
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const formScaleAnim = useRef(new Animated.Value(0.95)).current;
-  const formOpacityAnim = useRef(new Animated.Value(0)).current;
+  const [showSuccess, setShowSuccess] = useState(false)
+  const formScaleAnim = useRef(new Animated.Value(0.95)).current
+  const formOpacityAnim = useRef(new Animated.Value(0)).current
 
   // Navegação
   const navigation = useNavigation()
@@ -839,8 +923,8 @@ export default function FormularioColeta() {
         duration: 400,
         useNativeDriver: true,
       }),
-    ]).start();
-  }, []);
+    ]).start()
+  }, [])
 
   const motoristas = ["João Silva", "Maria Oliveira", "Pedro Santos", "Ana Costa", "Carlos Ferreira"]
   const prefixos = ["ABC-1234", "DEF-5678", "GHI-9012", "JKL-3456", "MNO-7890"]
@@ -875,18 +959,31 @@ export default function FormularioColeta() {
     return Object.keys(newErrors).length === 0
   }
 
+  // Função para limpar todos os campos do formulário
+  const resetForm = () => {
+    setMotorista("")
+    setPrefixo("")
+    setDataHora(new Date())
+    setFrequencia("")
+    setSetor("")
+    setColetores([])
+    setCelular("")
+    setLider("")
+    setErrors({})
+  }
+
   const handleSubmit = () => {
     if (validateForm()) {
-      setIsSubmitting(true);
-      
-      // Simula um envio com feedback visual
+      setIsSubmitting(true)
+
+      // Simular envio para o servidor
       setTimeout(() => {
-        setIsSubmitting(false);
-        Alert.alert(
-          "Sucesso", 
-          "Formulário enviado com sucesso!", 
-          [{ text: "OK" }]
-        );
+        setIsSubmitting(false)
+
+        // Mostrar mensagem de sucesso
+        setShowSuccess(true)
+
+        // Registrar dados no console
         console.log({
           motorista,
           prefixo,
@@ -896,14 +993,16 @@ export default function FormularioColeta() {
           coletores,
           celular,
           lider,
-        });
-      }, 1500);
+        })
+
+        // Limpar o formulário após envio bem-sucedido
+        resetForm()
+      }, 1500)
     }
   }
 
   const navigateToHistorico = () => {
-    // Navega para a tela de histórico
-    navigation.navigate("formulario_historico")
+    navigation.navigate("formulario_historico/formolario_historico")
   }
 
   const getFormLayout = () => {
@@ -1065,6 +1164,7 @@ export default function FormularioColeta() {
     )
   }
 
+  // Função para calcular a largura do formulário com base no tamanho da tela e orientação
   const getFormWidth = () => {
     if (isTablet) {
       return isLandscape ? width * 0.9 : width * 0.8
@@ -1073,6 +1173,7 @@ export default function FormularioColeta() {
     return isLandscape ? width * 0.8 : width * 0.9
   }
 
+  // Função para calcular o padding do formulário com base no tipo de dispositivo
   const getFormPadding = () => {
     switch (deviceType) {
       case "tablet":
@@ -1089,97 +1190,102 @@ export default function FormularioColeta() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      
-      <View style={styles.backgroundContainer} />
+    <ActiveAutocompleteProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
-      >
-        <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingVertical: getResponsiveSize(20) }]}
-          keyboardShouldPersistTaps="handled"
+        <View style={styles.backgroundContainer} />
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoidingView}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
         >
-          <View style={styles.header}>
-            <Text style={[styles.headerTitle, { fontSize: normalize(24) }]}>Formulário de Coleta</Text>
-            <View style={styles.headerUnderline} />
-          </View>
-
-          <Animated.View
-            style={[
-              styles.formContainer,
-              {
-                width: getFormWidth(),
-                maxWidth: 1000,
-                padding: getFormPadding(),
-                borderRadius: getResponsiveSize(20),
-                transform: [{ scale: formScaleAnim }],
-                opacity: formOpacityAnim,
-              },
-            ]}
+          <ScrollView
+            contentContainerStyle={[styles.scrollContent, { paddingVertical: getResponsiveSize(20) }]}
+            keyboardShouldPersistTaps="handled"
           >
-            {getFormLayout()}
+            <View style={styles.header}>
+              <Text style={[styles.headerTitle, { fontSize: normalize(24) }]}>Formulário de Coleta</Text>
+              <View style={styles.headerUnderline} />
+            </View>
 
-            {/* Botão de Histórico de Soltura de Rotas */}
-            <Ripple
+            <Animated.View
               style={[
-                styles.historicoButton,
+                styles.formContainer,
                 {
-                  height: getButtonHeight(),
-                  marginTop: getResponsiveSize(20),
-                  marginBottom: getResponsiveSize(15),
+                  width: getFormWidth(),
+                  maxWidth: 1000,
+                  padding: getFormPadding(),
+                  borderRadius: getResponsiveSize(20),
+                  transform: [{ scale: formScaleAnim }],
+                  opacity: formOpacityAnim,
                 },
               ]}
-              onPress={navigateToHistorico}
             >
-              <View style={styles.buttonBackground}>
-                <Text style={[styles.historicoButtonText, { fontSize: normalize(16) }]}>
-                  HISTÓRICO DE SOLTURA DE ROTAS
-                </Text>
-              </View>
-            </Ripple>
+              {getFormLayout()}
 
-            {/* Botão de envio */}
-            <Ripple
-              style={[
-                styles.submitButton,
-                {
-                  height: getButtonHeight(),
-                  marginTop: getResponsiveSize(10),
-                },
-              ]}
-              onPress={handleSubmit}
-            >
-              <View style={styles.submitButtonBackground}>
-                {isSubmitting ? (
-                  <ActivityIndicator color="white" size="small" />
-                ) : (
-                  <Text style={[styles.submitButtonText, { fontSize: normalize(16) }]}>ENVIAR</Text>
-                )}
-              </View>
-            </Ripple>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              {/* Botão de Histórico de Soltura de Rotas */}
+              <Ripple
+                style={[
+                  styles.historicoButton,
+                  {
+                    height: getButtonHeight(),
+                    marginTop: getResponsiveSize(20),
+                    marginBottom: getResponsiveSize(15),
+                  },
+                ]}
+                onPress={navigateToHistorico}
+              >
+                <View style={styles.buttonBackground}>
+                  <Text style={[styles.historicoButtonText, { fontSize: normalize(16) }]}>
+                    HISTÓRICO DE SOLTURA DE ROTAS
+                  </Text>
+                </View>
+              </Ripple>
+
+              {/* Botão de envio */}
+              <Ripple
+                style={[
+                  styles.submitButton,
+                  {
+                    height: getButtonHeight(),
+                    marginTop: getResponsiveSize(10),
+                  },
+                ]}
+                onPress={handleSubmit}
+              >
+                <View style={styles.submitButtonBackground}>
+                  {isSubmitting ? (
+                    <ActivityIndicator color="white" size="small" />
+                  ) : (
+                    <Text style={[styles.submitButtonText, { fontSize: normalize(16) }]}>ENVIAR</Text>
+                  )}
+                </View>
+              </Ripple>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        {/* Componente de mensagem de sucesso */}
+        <SuccessMessage visible={showSuccess} onClose={() => setShowSuccess(false)} />
+      </SafeAreaView>
+    </ActiveAutocompleteProvider>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffffff", // Fundo branco conforme solicitado
   },
   backgroundContainer: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#f0f2ff',
+    backgroundColor: "#ffffff", // Fundo branco conforme solicitado
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -1196,28 +1302,22 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontWeight: "bold",
-    color: "#3949AB",
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    color: "#8BC34A", // Título verde claro conforme solicitado
+    textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)", // Usando textShadow em vez de textShadowColor, etc.
   },
   headerUnderline: {
     height: 3,
     width: 60,
-    backgroundColor: "#5C6BC0",
+    backgroundColor: "#8BC34A", // Verde claro para combinar com o título
     marginTop: 8,
     borderRadius: 1.5,
   },
   formContainer: {
     backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    elevation: 8,
+    boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.15)", // Usando boxShadow em vez de shadowColor, etc.
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: "rgba(0,0,0,0.05)",
   },
   twoColumnLayout: {
     flexDirection: "row",
@@ -1268,11 +1368,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#fff",
     paddingHorizontal: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.05)", // Usando boxShadow em vez de shadowColor, etc.
   },
   input: {
     flex: 1,
@@ -1302,12 +1398,8 @@ const styles = StyleSheet.create({
     elevation: 1000,
     marginTop: 5,
     borderRadius: 10,
-    overflow: 'hidden',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+    overflow: "hidden",
+    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.2)", // Usando boxShadow em vez de shadowColor, etc.
   },
   dropdown: {
     backgroundColor: "white",
@@ -1332,11 +1424,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 15,
     justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.05)", // Usando boxShadow em vez de shadowColor, etc.
   },
   dateTimeText: {
     flex: 1,
@@ -1357,22 +1445,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#fff",
     paddingHorizontal: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.05)", // Usando boxShadow em vez de shadowColor, etc.
   },
   addButton: {
-    backgroundColor: "#8BC34A",
+    backgroundColor: "#8BC34A", // Verde claro para combinar com o tema
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+    boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.2)", // Usando boxShadow em vez de shadowColor, etc.
   },
   addButtonText: {
     color: "white",
@@ -1390,11 +1470,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: "#eee",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)", // Usando boxShadow em vez de shadowColor, etc.
   },
   coletorName: {
     flex: 1,
@@ -1406,11 +1482,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#e53935",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
+    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.2)", // Usando boxShadow em vez de shadowColor, etc.
   },
   removeButtonText: {
     color: "white",
@@ -1427,19 +1499,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    overflow: "hidden",
+    boxShadow: "0px 3px 5px rgba(0, 0, 0, 0.2)", // Usando boxShadow em vez de shadowColor, etc.
   },
   submitButtonBackground: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#8BC34A',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#8BC34A", // Verde claro para combinar com o tema
+    justifyContent: "center",
+    alignItems: "center",
   },
   submitButtonText: {
     color: "white",
@@ -1452,19 +1520,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 12,
     width: "100%",
-    overflow: 'hidden',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    overflow: "hidden",
+    boxShadow: "0px 3px 5px rgba(0, 0, 0, 0.2)", // Usando boxShadow em vez de shadowColor, etc.
   },
   buttonBackground: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#5C6BC0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#8BC34A", // Verde claro para combinar com o tema
+    justifyContent: "center",
+    alignItems: "center",
   },
   historicoButtonText: {
     color: "white",
@@ -1472,11 +1536,71 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   rippleContainer: {
-    overflow: 'hidden',
-    position: 'relative',
+    overflow: "hidden",
+    position: "relative",
   },
   ripple: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    position: "absolute",
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+  },
+  // Estilos para a mensagem de sucesso
+  successOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  successContainer: {
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 25,
+    alignItems: "center",
+    width: "80%",
+    maxWidth: 300,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  successIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#8BC34A",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  successIcon: {
+    color: "white",
+    fontSize: 36,
+    fontWeight: "bold",
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  successText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  successCloseButton: {
+    backgroundColor: "#8BC34A",
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  successCloseButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 })
+
+export default Formulario
+

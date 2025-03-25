@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  KeyboardAvoidingView, 
+"use client"
+
+import React, { useState, useEffect } from "react"
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   StatusBar,
@@ -15,70 +17,79 @@ import {
   ScrollView,
   PixelRatio,
   useWindowDimensions,
-  BackHandler
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+  BackHandler,
+  ActivityIndicator,
+  Alert,
+} from "react-native"
+import { useNavigation, CommonActions } from "@react-navigation/native"
 
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const scale = SCREEN_WIDTH / 375; 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window")
+const scale = SCREEN_WIDTH / 375
 
 const normalize = (size) => {
-  const newSize = size * scale;
-  if (Platform.OS === 'ios') {
-    return Math.round(PixelRatio.roundToNearestPixel(newSize));
+  const newSize = size * scale
+  if (Platform.OS === "ios") {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize))
   }
-  return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
-};
-
+  return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2
+}
 
 const ProfessionalLogo = ({ screenHeight }) => {
-  const logoSize = screenHeight * 0.12;
-  const fontSize = screenHeight * 0.04;
-  
- 
-  const shimmerValue = new Animated.Value(0);
-  
+  const logoSize = screenHeight * 0.12
+  const fontSize = screenHeight * 0.04
+
+  const shimmerValue = new Animated.Value(0)
+
   React.useEffect(() => {
     Animated.loop(
       Animated.timing(shimmerValue, {
         toValue: 1,
         duration: 3000,
         easing: Easing.linear,
-        useNativeDriver: true
-      })
-    ).start();
-  }, []);
-  
+        useNativeDriver: true,
+      }),
+    ).start()
+  }, [])
+
   const shimmerTranslate = shimmerValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [-logoSize, logoSize]
-  });
+    outputRange: [-logoSize, logoSize],
+  })
 
   return (
     <View style={[logoStyles.container, { marginBottom: screenHeight * 0.03 }]}>
       <View style={[logoStyles.outerCircle, { width: logoSize, height: logoSize, borderRadius: logoSize / 2 }]}>
-        <View style={[logoStyles.innerCircle, { 
-          width: logoSize * 0.85, 
-          height: logoSize * 0.85, 
-          borderRadius: logoSize * 0.425 
-        }]}>
-          <Animated.View 
+        <View
+          style={[
+            logoStyles.innerCircle,
+            {
+              width: logoSize * 0.85,
+              height: logoSize * 0.85,
+              borderRadius: logoSize * 0.425,
+            },
+          ]}
+        >
+          <Animated.View
             style={[
               logoStyles.shimmer,
               {
                 width: logoSize * 0.6,
                 height: logoSize,
-                transform: [{ translateX: shimmerTranslate }, { rotate: '45deg' }]
-              }
-            ]} 
+                transform: [{ translateX: shimmerTranslate }, { rotate: "45deg" }],
+              },
+            ]}
           />
           <Text style={[logoStyles.logoText, { fontSize: fontSize }]}>LG</Text>
           <View style={[logoStyles.leafContainer, { top: logoSize * 0.15, right: logoSize * 0.2 }]}>
-            <View style={[logoStyles.leaf, { 
-              width: logoSize * 0.12, 
-              height: logoSize * 0.18 
-            }]} />
+            <View
+              style={[
+                logoStyles.leaf,
+                {
+                  width: logoSize * 0.12,
+                  height: logoSize * 0.18,
+                },
+              ]}
+            />
           </View>
         </View>
       </View>
@@ -86,124 +97,223 @@ const ProfessionalLogo = ({ screenHeight }) => {
         <Text style={[logoStyles.companyName, { fontSize: normalize(24) }]}>LIMPA GYN</Text>
         <View style={logoStyles.taglineContainer}>
           <View style={logoStyles.taglineLine} />
-          <Text style={[logoStyles.taglineText, { fontSize: normalize(10) }]}>COLETA SELETIVA</Text>
+          <Text style={[logoStyles.taglineText, { fontSize: normalize(10) }]}>SOLTURA DE FROTAS</Text>
           <View style={logoStyles.taglineLine} />
         </View>
       </View>
     </View>
-  );
-};
+  )
+}
 const logoStyles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   outerCircle: {
-    backgroundColor: '#8BC34A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    backgroundColor: "#8BC34A",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 10,
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   innerCircle: {
-    backgroundColor: '#7CB342',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    backgroundColor: "#7CB342",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderColor: "rgba(255, 255, 255, 0.5)",
   },
   shimmer: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    position: "absolute",
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
   },
   logoText: {
-    color: 'white',
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    color: "white",
+    fontWeight: "bold",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
   leafContainer: {
-    position: 'absolute',
+    position: "absolute",
   },
   leaf: {
     borderTopLeftRadius: 10,
     borderBottomRightRadius: 10,
-    backgroundColor: '#CDDC39',
-    transform: [{ rotate: '45deg' }],
+    backgroundColor: "#CDDC39",
+    transform: [{ rotate: "45deg" }],
   },
   nameContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 15,
   },
   companyName: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     letterSpacing: 3,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
   taglineContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 8,
   },
   taglineLine: {
     width: 20,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
   },
   taglineText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '600',
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: "600",
     letterSpacing: 1.5,
     marginHorizontal: 8,
   },
-});
+})
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const { width, height } = useWindowDimensions();
-  const isSmallDevice = height < 700;
+  const [name, setName] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { width, height } = useWindowDimensions()
+  const isSmallDevice = height < 700
 
-  const navigation = useNavigation();
+  const navigation = useNavigation()
+
   const navigateToRegister = () => {
-    navigation.navigate('cadastro/cadastro');
-  };
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      return true;
-    });
+    navigation.navigate("cadastro/cadastro")
+  }
 
-    return () => backHandler.remove();
-  }, []);
-  
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      return true
+    })
+
+    return () => backHandler.remove()
+  }, [])
+
+  // Try multiple navigation methods to handle different navigation structures
+  const tryMultipleNavigationMethods = () => {
+    try {
+      // Method 1: Standard navigate
+      navigation.navigate("formulario/formulario")
+      console.log("Method 1 succeeded")
+      return true
+    } catch (error1) {
+      console.log("Method 1 failed:", error1)
+
+      try {
+        // Method 2: CommonActions dispatch
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: "formulario/formulario",
+          }),
+        )
+        console.log("Method 2 succeeded")
+        return true
+      } catch (error2) {
+        console.log("Method 2 failed:", error2)
+
+        try {
+          // Method 3: Reset navigation stack
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: "formulario/formulario" }],
+            }),
+          )
+          console.log("Method 3 succeeded")
+          return true
+        } catch (error3) {
+          console.log("Method 3 failed:", error3)
+
+          try {
+            // Method 4: Try with just "formulario"
+            navigation.navigate("formulario")
+            console.log("Method 4 succeeded")
+            return true
+          } catch (error4) {
+            console.log("Method 4 failed:", error4)
+
+            try {
+              // Method 5: Try with nested navigation
+              navigation.navigate("formulario", { screen: "formulario" })
+              console.log("Method 5 succeeded")
+              return true
+            } catch (error5) {
+              console.log("Method 5 failed:", error5)
+              return false
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const handleLogin = () => {
+    // Validate inputs
+    if (!name.trim()) {
+      Alert.alert("Erro", "Por favor, digite seu nome")
+      return
+    }
+
+    if (!password.trim()) {
+      Alert.alert("Erro", "Por favor, digite sua senha")
+      return
+    }
+
+    // Simulate login process
+    setIsLoading(true)
+
+    // Simulate API call with timeout
+    setTimeout(() => {
+      setIsLoading(false)
+
+      // Try multiple navigation methods
+      const navigationSucceeded = tryMultipleNavigationMethods()
+
+      if (!navigationSucceeded) {
+        // If all navigation methods fail, show an alert
+        Alert.alert("Erro de Navegação", "Não foi possível navegar para o formulário. Tente novamente.", [
+          {
+            text: "OK",
+            onPress: () => console.log("Navigation failed"),
+          },
+        ])
+      }
+
+      // Reset form
+      setName("")
+      setPassword("")
+    }, 1500)
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
       <View style={styles.backgroundGradient}>
-        <View style={styles.overlay}/>
- 
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <View style={styles.overlay} />
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardAvoidingView}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={[
               styles.scrollContent,
-              { 
-                paddingTop: height * 0.05, 
+              {
+                paddingTop: height * 0.05,
                 paddingBottom: height * 0.05,
-                paddingHorizontal: width * 0.05 
-              }
+                paddingHorizontal: width * 0.05,
+              },
             ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -211,27 +321,28 @@ export default function LoginScreen() {
             {/* Logo Profissional */}
             <ProfessionalLogo screenHeight={height} />
 
-            <View style={[
-              styles.formContainer, 
-              { 
-                width: width > 500 ? 450 : width * 0.9,
-                padding: width * 0.06,
-                marginTop: isSmallDevice ? height * 0.02 : height * 0.04
-              }
-            ]}>
+            <View
+              style={[
+                styles.formContainer,
+                {
+                  width: width > 500 ? 450 : width * 0.9,
+                  padding: width * 0.06,
+                  marginTop: isSmallDevice ? height * 0.02 : height * 0.04,
+                },
+              ]}
+            >
               <Text style={[styles.welcomeText, { fontSize: normalize(22) }]}>Bem-vindo</Text>
-              
+
               <View style={[styles.inputWrapper, { marginBottom: height * 0.02 }]}>
-                <Text style={[styles.inputLabel, { fontSize: normalize(14) }]}>E-mail</Text>
+                <Text style={[styles.inputLabel, { fontSize: normalize(14) }]}>Nome</Text>
                 <View style={[styles.inputContainer, { height: height * 0.07 }]}>
-                  <TextInput 
+                  <TextInput
                     style={[styles.input, { fontSize: normalize(16) }]}
-                    placeholder="Seu e-mail" 
+                    placeholder="Seu nome"
                     placeholderTextColor="#999"
-                    keyboardType="email-address"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
+                    value={name}
+                    onChangeText={setName}
+                    autoCapitalize="words"
                   />
                 </View>
               </View>
@@ -239,37 +350,39 @@ export default function LoginScreen() {
               <View style={[styles.inputWrapper, { marginBottom: height * 0.01 }]}>
                 <Text style={[styles.inputLabel, { fontSize: normalize(14) }]}>Senha</Text>
                 <View style={[styles.inputContainer, { height: height * 0.07 }]}>
-                  <TextInput 
+                  <TextInput
                     style={[styles.input, { fontSize: normalize(16) }]}
-                    placeholder="Sua senha" 
+                    placeholder="Sua senha"
                     placeholderTextColor="#999"
                     secureTextEntry={!showPassword}
                     value={password}
                     onChangeText={setPassword}
                   />
-                  <TouchableOpacity 
-                    style={styles.eyeIcon} 
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
                     onPress={() => setShowPassword(!showPassword)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.eyeIconText, { fontSize: normalize(18) }]}>
-                      {showPassword ? "👁️" : "👁️‍🗨️"}
-                    </Text>
+                    <Text style={[styles.eyeIconText, { fontSize: normalize(18) }]}>{showPassword ? "👁️" : "👁️‍🗨️"}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
               <TouchableOpacity style={[styles.forgotPassword, { marginBottom: height * 0.03 }]}>
-                <Text style={[styles.forgotPasswordText, { fontSize: normalize(14) }]}>
-                  Esqueceu a senha?
-                </Text>
+                <Text style={[styles.forgotPasswordText, { fontSize: normalize(14) }]}>Esqueceu a senha?</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.loginButton, { height: height * 0.07 }]}
                 activeOpacity={0.8}
+                onPress={handleLogin}
+                disabled={isLoading}
               >
-                <Text style={[styles.loginButtonText, { fontSize: normalize(16) }]}>ENTRAR</Text>
+                {isLoading ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={[styles.loginButtonText, { fontSize: normalize(16) }]}>ENTRAR</Text>
+                )}
               </TouchableOpacity>
 
               <View style={[styles.divider, { marginVertical: height * 0.02 }]}>
@@ -278,10 +391,11 @@ export default function LoginScreen() {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.registerButton, { height: height * 0.07 }]}
                 activeOpacity={0.8}
                 onPress={navigateToRegister}
+                disabled={isLoading}
               >
                 <Text style={[styles.registerButtonText, { fontSize: normalize(16) }]}>CRIAR CONTA</Text>
               </TouchableOpacity>
@@ -298,7 +412,7 @@ export default function LoginScreen() {
         </KeyboardAvoidingView>
       </View>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -307,121 +421,121 @@ const styles = StyleSheet.create({
   },
   backgroundGradient: {
     flex: 1,
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#8BC34A', // Cor de fundo verde principal
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#8BC34A",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Overlay mais leve para o fundo verde
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
   keyboardAvoidingView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   formContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
-    alignSelf: 'center',
-    shadowColor: '#000',
+    alignSelf: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 10,
   },
   welcomeText: {
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   inputWrapper: {
-    width: '100%',
+    width: "100%",
   },
   inputLabel: {
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: "600",
+    color: "#555",
     marginBottom: 8,
     paddingLeft: 2,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1.5,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     borderRadius: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     paddingHorizontal: 15,
   },
   input: {
     flex: 1,
-    height: '100%',
-    color: '#333',
+    height: "100%",
+    color: "#333",
   },
   eyeIcon: {
     padding: 8,
   },
-  eyeIconText: {
-  },
+  eyeIconText: {},
   forgotPassword: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginTop: 5,
   },
   forgotPasswordText: {
-    color: '#8BC34A',
-    fontWeight: '600',
+    color: "#8BC34A",
+    fontWeight: "600",
   },
   loginButton: {
-    backgroundColor: '#8BC34A',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#8BC34A",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 12,
     marginBottom: 15,
     elevation: 3,
-    shadowColor: '#8BC34A',
+    shadowColor: "#8BC34A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
   },
   loginButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     letterSpacing: 1,
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
   },
   dividerText: {
-    color: '#999',
+    color: "#999",
     paddingHorizontal: 10,
   },
   registerButton: {
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#8BC34A',
+    borderColor: "#8BC34A",
   },
   registerButtonText: {
-    color: '#8BC34A',
-    fontWeight: 'bold',
+    color: "#8BC34A",
+    fontWeight: "bold",
     letterSpacing: 1,
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   footerText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-  }
-});
+    color: "rgba(255, 255, 255, 0.9)",
+  },
+})
+
